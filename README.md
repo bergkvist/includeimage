@@ -1,35 +1,50 @@
 See https://github.com/moby/moby/issues/3378
 
-# dockerfile-include-syntax
+# bergkvist/includeimage
 
 Dockerfile syntax extension for combining multiple Docker images into one.
 
 ## Usage
 
+### Syntax
+
+```
+INCLUDE <image>:<tag>
+```
+
+### Example
+
 ```Dockerfile
-#syntax=bergkvist/dockerfile-include-syntax
+#syntax=bergkvist/includeimage
 FROM alpine:3.12.0
 INCLUDE rust:1.44-alpine3.12
 INCLUDE python:3.8.3-alpine3.12
 ```
 
-## How does it work?
+### How to build
 
-```Dockerfile
-INCLUDE <image>:<tag>
+Remember to use Docker buildkit when building, as seen below.
+
+```sh
+DOCKER_BUILDKIT=1 docker build -t myimage:latest .
 ```
+
+## Behavior
+
+- The entire file system of an included image is copied over
+- The environment variables of the included image is merged in
+  - PATH gets special treatment
+- CMD and ENTRYPOINT of included image is ignored.
 
 How it is implemented:
 
 ```Dockerfile
 # All the file system contents are copied over (using multi-stage builds)
 COPY --from=<image>:<tag> / /
-
-# We also need to include the environment of the image, and merge it into our
-# current image. There is no way to do this with standard Dockerfile syntax.
-# The PATH variable will get special treatment in this merging process
-ENV ???
-
-# We can get the environment of a third-party image by inspecting it:
-docker inspect <image>:<tag> --format='{{.Config.Env}}'
+# We extract the environment variables from the included image
+ENV <-(merge)- docker inspect <image>:<tag> --format='{{.Config.Env}}'
 ```
+
+## Current Limitations
+
+- Currently only supports including amd64 linux images.
