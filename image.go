@@ -1,4 +1,4 @@
-package main
+package includeimage
 
 import (
 	"encoding/json"
