@@ -45,6 +45,7 @@ COPY --from=<image>:<tag> / /
 ENV <-(merge)- docker inspect <image>:<tag> --format='{{.Config.Env}}'
 ```
 
-## Current Limitations
+## Current Issues/Limitations
 
 - Currently only supports including amd64 linux images.
+- The PATH variable will eventually contain a lot of duplicate entries. This could probably be cleaned up, but shouldn't cause any issues. (I think)
